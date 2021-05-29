@@ -8,13 +8,11 @@ from river.models.workflow import NewModel
 class ClassWorkflowObject(object):
 
     def __init__(self, wokflow_object_class, field_name):
-        print("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWw",wokflow_object_class)
         self.wokflow_object_class = wokflow_object_class
         self.field_name = field_name
-        print("content type",self._content_type)
+        # self.comapny_id = comapny_id
         self.workflow = NewModel.objects.filter(field_name=self.field_name, content_type=self._content_type).first()
         self._cached_river_driver = None
-        print("class work flow for field name",self.field_name)
 
     @property
     def _river_driver(self):
@@ -38,7 +36,7 @@ class ClassWorkflowObject(object):
 
     @property
     def initial_state(self):
-        workflow = Workflow.objects.filter(content_type=self._content_type, field_name=self.field_name).first()
+        workflow = NewModel.objects.filter(content_type=self._content_type, field_name=self.field_name).first()
         return workflow.initial_state if workflow else None
 
     @property

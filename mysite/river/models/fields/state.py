@@ -79,7 +79,6 @@ def _on_workflow_object_saved(sender, instance, created, *args, **kwargs):
     for instance_workflow in instance.river.all(instance.__class__):
 
         if created:
-            print("oh!",created)
             instance_workflow.initialize_approvals()
             if not instance_workflow.get_state():
                 init_state = getattr(instance.__class__.river, instance_workflow.field_name).initial_state

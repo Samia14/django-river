@@ -30,7 +30,7 @@ class TransitionSignal(object):
         self.field_name = field_name
         self.transition_approval = transition_approval
         self.content_type = ContentType.objects.get_for_model(NewModel.objects.get(id=1).__class__)
-        # self.workflow = NewModel.objects.get(content_type=self.content_type, field_name=self.field_name)
+        #self.workflow = NewModel.objects.get(content_type=self.content_type, field_name=self.field_name)
         self.workflow = NewModel.objects.get(field_name=self.field_name)
 
 
@@ -84,14 +84,9 @@ class ApproveSignal(object):
         self.workflow_object = workflow_object
         self.field_name = field_name
         self.transition_approval = transition_approval
-        print("dddddddddddddddddddddd",NewModel.objects.get(id=1).__class__)
         self.content_type = ContentType.objects.get_for_model(NewModel.objects.get(id=1).__class__)
-        print("work flow __________________________________",workflow_object.__dict__)
-        print("================================================================= ",NewModel.objects.all(),self.field_name,self.content_type)
-        print("sosmtsdhs",NewModel.objects.get(id=1).__dict__)
         # self.workflow = NewModel.objects.get(content_type=self.content_type, field_name=self.field_name)
         self.workflow = NewModel.objects.get(field_name=self.field_name)
-        print(self.workflow.__dict__)
 
 
     def __enter__(self):
@@ -138,17 +133,16 @@ class ApproveSignal(object):
 
 
 class OnCompleteSignal(object):
-    def __init__(self, workflow_object, field_name):
+    def __init__(self, workflow_object,check_field,field_name):
         self.workflow_object = workflow_object
         self.field_name = field_name
-        self.workflow = getattr(self.workflow_object, self.field_name)
-        print("stateeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",self.workflow_object.__dict__)
-        print("work flow oobje---------------------------",self.workflow.__dict__)
-        self.workflow_object.test = self.workflow_object.test2.id
+        self.workflow = getattr(self.workflow_object, check_field)
+        # print("someee thing ",getattr(self.workflow_object.river, self.field_name))
         self.status = self.workflow
         self.content_type = ContentType.objects.get_for_model(NewModel.objects.get(id=1).__class__)
         # self.workflow = Workflow.objects.get(content_type=self.content_type, field_name=self.field_name)
         self.workflow = NewModel.objects.get(field_name=self.field_name)
+        self.workflow_object.save()
 
 
     def __enter__(self):

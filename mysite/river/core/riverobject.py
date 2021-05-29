@@ -11,11 +11,8 @@ class RiverObject(object):
     def __init__(self, owner):
         self.owner = owner
         self.is_class = inspect.isclass(owner)
-
-    def __getattr__(self, field_name):
+    def __getattr__(self,field_name):
         cls = self.owner if self.is_class else self.owner.__class__
-        print("in get attr,",self.is_class)
-        print("owner name",self.owner.__dict__,field_name)
         if field_name not in workflow_registry.workflows[id(cls)]:
             raise Exception("Workflow with name:%s doesn't exist for class:%s" % (field_name, cls.__name__))
         if self.is_class:

@@ -23,11 +23,8 @@ class RiverConfig(object):
                 'GROUP_CLASS': Group,
                 'INJECT_MODEL_ADMIN': False
             }
-            print("Content type model",ContentType)
             river_settings = {}
             for key, default in allowed_configurations.items():
-                print("yaraaa",self.get_with_prefix(key))
-                print("default",default)
                 river_settings[key] = getattr(settings, self.get_with_prefix(key), default)
 
             river_settings['IS_MSSQL'] = connection.vendor == 'microsoft'
@@ -39,8 +36,6 @@ class RiverConfig(object):
         return '%s_%s' % (self.prefix, config)
 
     def __getattr__(self, item):
-        print("hiiiiiiiiiiiiii",item)
-        print("self.settings",self.settings)
         if item in self.settings:
             return self.settings[item]
         else:

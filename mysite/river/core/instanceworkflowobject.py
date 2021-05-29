@@ -20,35 +20,25 @@ LOGGER = logging.getLogger(__name__)
 class InstanceWorkflowObject(object):
 
     def __init__(self, workflow_object, field_name):
-        print("class work flowwww i staet",workflow_object.__dict__)
-        print("howwww",getattr(workflow_object.__class__.river, field_name))
-
         self.class_workflow = getattr(workflow_object.__class__.river, field_name)
-        # self.temp_mymodel = self.workflow_object
-        self.workflow_object = Workflow.objects.get(id=NewModel.objects.get(company_id=2).workflow_ptr_id)
-        
-        print("workflow objec",self.workflow_object)
+        self.workflow_object = workflow_object
+        self.company_id = workflow_object.__dict__['company_id']
+        self.check_field = field_name
         self.content_type = app_config.CONTENT_TYPE_CLASS.objects.get_for_model(self.workflow_object)
-        print("content type",self.content_type.__dict__)
-        print("fklsdjf",app_config.CONTENT_TYPE_CLASS)
-        print("allllll",app_config.CONTENT_TYPE_CLASS.objects.get_for_model(self.workflow_object))
-        print("Work flow obj",Workflow.objects.all()[0].__dict__)
-        print("field name", NewModel.objects.get(company_id=2).field_name)
-        self.field_name = NewModel.objects.get(company_id=2).field_name
-        print("NewModel.objects.get(company_id=2).workflow_ptr_id0",NewModel.objects.get(company_id=2).workflow_ptr_id)
-        self.workflow = Workflow.objects.get(id=NewModel.objects.get(company_id=2).workflow_ptr_id)
+        self.field_name = NewModel.objects.get(company_id=self.company_id).field_name
+        self.workflow = Workflow.objects.get(id=NewModel.objects.get(company_id=self.company_id).workflow_ptr_id)
 
         self.initialized = False
-        print("some this nkd",self.field_name)
-        print("work flow instance",self.workflow)
 
     @transaction.atomic
     def initialize_approvals(self):
         print("--------------------------------------------------------------")
         if not self.initialized:
-            print("work flwo object",self.workflow.__dict__)
+            # print("work flwo object",self.workflow.__dict__)
+            # print("workf flow ",self.workflow.transition_approvals.filter(workflow_object=self.workflow_object))
+            # # print("work flow transition meta",self.workflow.transition_metas.filter(workflow_object=self.workflow_object))
+            # print("dsjdh",self.workflow.initial_state)
 
-            print("sdjsh000000000000000000",self.workflow and self.workflow.transition_approvals.filter(workflow_object=self.workflow_object).count() == 0)
             print("transistion approvals in workflow",self.workflow.transition_approvals.filter(workflow_object=self.workflow_object).count())
             if self.workflow and self.workflow.transition_approvals.filter(workflow_object=self.workflow_object).count() == 0:
                 transition_meta_list = self.workflow.transition_metas.filter(source_state=self.workflow.initial_state)
@@ -105,10 +95,7 @@ class InstanceWorkflowObject(object):
     @property
     def recent_approval(self):
         try:
-            print("nowooooo",self.class_workflow.__dict__)
-
-            return TransitionApproval.objects.filter(transaction_date__isnull=False).latest('transaction_date')
-
+           return TransitionApproval.objects.filter(transaction_date__isnull=False).latest('transaction_date')
         except TransitionApproval.DoesNotExist:
             return None
 
@@ -139,15 +126,15 @@ class InstanceWorkflowObject(object):
         return State.objects.filter(pk__in=all_destination_state_ids)
 
     def get_available_approvals(self, as_user=None, destination_state=None):
-        self.class_workflow.workflow=NewModel.objects.get(company_id=2).workflow_ptr_id
-        self.class_workflow = NewModel.objects.get(company_id=2)
-        print("CLASSSSSSS WORK FLOW",self.class_workflow.__dict__)
-        print("fjkehfjkhjkhe",self.class_workflow.__dict__)
-        x = self.class_workflow.get_available_approvals(as_user, ).filter(object_id=1)
-        print("i am herekllkjkljlee",x.__dict__)
-        print("i am heremmmee",x)
-        print("dddd",self.workflow_object.__dict__)
-        # print("dddsajkdhd",self.temp_mymodel.pk)
+        self.class_workflow.workflow=NewModel.objects.get(company_id=self.company_id).workflow_ptr_id
+        # print("CLASSSSSSS WORK FLOW",self.class_workflow.__dict__)
+        # print("fjkehfjkhjkhe",self.class_workflow.__dict__)
+        # x = self.class_workflow.get_available_approvals(as_user, ).filter(object_id=1)
+        # print("i am herekllkjkljlee",x.__dict__)
+        # print("i am heremmmee",x)
+        # print("dddd",self.workflow_object.__dict__)
+        # # print("dddsajkdhd",self.temp_mymodel.pk)
+        # print("work floow classsssssssssssssssssssssss",self.workflow_object)
 
         qs = self.class_workflow.get_available_approvals(as_user, ).filter(object_id=self.workflow_object.pk)
         print("first time iterations",qs)
@@ -169,6 +156,8 @@ class InstanceWorkflowObject(object):
             available_approvals = available_approvals.filter(transition__destination_state=next_state)
             if available_approvals.count() == 0:
                 available_states = self.get_available_states(as_user)
+                print("--------------------------------------------------------------------------------")
+                print("available state",available_states)
                 raise RiverException(ErrorCode.INVALID_NEXT_STATE_FOR_USER, "Invalid state is given(%s). Valid states is(are) %s" % (
                     next_state.__str__(), ','.join([ast.__str__() for ast in available_states])))
         elif number_of_available_approvals > 1 and not next_state:
@@ -179,6 +168,7 @@ class InstanceWorkflowObject(object):
         approval.transactioner = as_user
         approval.transaction_date = timezone.now()
         print("some thing",)
+        print("workflow obj now",self.workflow_object)
         approval.previous = self.recent_approval
         approval.save()
 
@@ -190,7 +180,9 @@ class InstanceWorkflowObject(object):
             approval.transition.status = DONE
             approval.transition.save()
             print("approval",approval.__dict__)
-            previous_state = self.get_state()
+            print("workflow",self.workflow_object.__dict__)
+            print("work flowww",self.workflow.__dict__)
+            previous_state = self.check_field
             self.set_state(approval.transition.destination_state)
             has_transit = True
             if self._check_if_it_cycled(approval.transition):
@@ -199,15 +191,18 @@ class InstanceWorkflowObject(object):
                 self.workflow_object, previous_state, self.get_state()))
 
         with self._approve_signal(approval), self._transition_signal(has_transit, approval), self._on_complete_signal():
+            # print("WORKKKKKKKKKKKKKKKKKKKK",self.workflow_object.__dict__)
             self.workflow_object.save()
 
     @atomic
     def cancel_impossible_future(self, approved_approval):
         transition = approved_approval.transition
-
+        print("cancel impossibel future",approved_approval)
         possible_transition_ids = {transition.pk}
-
+        print("print possibel transition",possible_transition_ids)
         possible_next_states = {transition.destination_state.label}
+        print("work  flowww",self.workflow_object)
+        print("workflowww object in imposssible",self.workflow)
         while possible_next_states:
             possible_transitions = Transition.objects.filter(
                 workflow=self.workflow,
@@ -217,7 +212,7 @@ class InstanceWorkflowObject(object):
             ).exclude(pk__in=possible_transition_ids)
 
             possible_transition_ids.update(set(possible_transitions.values_list("pk", flat=True)))
-
+            print("possibel transitions idd",possible_transition_ids)
             possible_next_states = set(possible_transitions.values_list("destination_state__label", flat=True))
 
         cancelled_transitions = Transition.objects.filter(
@@ -231,15 +226,15 @@ class InstanceWorkflowObject(object):
         cancelled_transitions.update(status=CANCELLED)
 
     def _approve_signal(self, approval):
-        print("field name and work floew obj",self.field_name,self.workflow_object)
+        print("field name and work floew obj",self.check_field,self.workflow_object)
         return ApproveSignal(self.workflow_object, self.field_name, approval)
 
     def _transition_signal(self, has_transit, approval):
-        print("transition signal,",has_transit)
+        print("transition signal,",has_transit,self.workflow_object)
         return TransitionSignal(has_transit, self.workflow_object, self.field_name, approval)
 
     def _on_complete_signal(self):
-        return OnCompleteSignal(self.workflow_object, self.field_name)
+        return OnCompleteSignal(self.workflow_object, self.check_field,self.field_name)
 
     @property
     def _content_type(self):
@@ -311,9 +306,10 @@ class InstanceWorkflowObject(object):
             iteration += 1
 
     def get_state(self):
-        print("field name",self.field_name)
+        print("field name",self.check_field)
         print("workflow object",self.workflow_object.__dict__)
-        return getattr(self.workflow_object, 'field_name')
+        return getattr(self.workflow_object, self.check_field)
 
     def set_state(self, state):
-        return setattr(self.workflow_object, self.field_name, state)
+
+        return setattr(self.workflow_object, self.check_field, state)
